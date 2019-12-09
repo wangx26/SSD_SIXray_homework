@@ -1,0 +1,4 @@
+data/sixray/
+eval/
+__pycache__/
+weights/
