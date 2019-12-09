@@ -42,7 +42,7 @@ EPOCH = 5
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Evaluation')
 parser.add_argument('--trained_model',
-                    default="/home/wangxu/Projects/SSD/weights/ssd300_sixray_10000.pth", type=str,
+                    default="/home/wangxu/Projects/SSD/weights/ssd300_sixray_40000.pth", type=str,
                     help='Trained state_dict file path to open')
 parser.add_argument('--save_folder',
                     default="eval/", type=str,
@@ -51,7 +51,7 @@ parser.add_argument('--confidence_threshold', default=0.2, type=float,
                     help='Detection confidence threshold')
 parser.add_argument('--top_k', default=5, type=int,
                     help='Further restrict the number of predictions to parse')
-parser.add_argument('--cuda', default=True, type=str2bool,
+parser.add_argument('--cuda', default=False, type=str2bool,
                     help='Use cuda to train model')
 parser.add_argument('--SIXray_root', default=SIXRAY_ROOT,
                     help='Location of SIXRAY root directory')
