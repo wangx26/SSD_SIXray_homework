@@ -1,4 +1,6 @@
-data/sixray/
+data/sixray/core_3000
+data/sixray/coreless_3000
+data/sixray/sixray_eval
 eval/
 __pycache__/
 weights/
