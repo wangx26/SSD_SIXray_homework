@@ -21,3 +21,7 @@ SSD
 ```
 python train.py --resume 'filename.pth' --start_iter num_of_newiter
 ```
+## 训练结果：
+使用SSD512，90%数据集进行训练，结果如下：
+
+![](/home/wangxu/Projects/SSD/weights/Screenshot from 2019-12-13 12-18-42.png) 
