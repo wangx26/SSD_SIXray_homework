@@ -12,6 +12,7 @@ from torch.autograd import Variable
 from data import SIXRAY_ROOT, SIXRAYAnnotationTransform, SIXRAYDetection, BaseTransform
 from data import SIXRAY_CLASSES as labelmap
 import torch.utils.data as data
+from data.config import HOME
 
 from ssd import build_ssd
 
@@ -25,6 +26,9 @@ import pickle
 import cv2
 import shutil
 
+import warnings
+warnings.filterwarnings("ignore")
+
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
@@ -35,14 +39,14 @@ def str2bool(v):
     return v.lower() in ("yes", "true", "t", "a1")
 
 
-EPOCH = 5
+EPOCH = 5000
 #GPUID = '3'
 #os.environ["CUDA_VISIBLE_DEVICES"] = GPUID
 
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Evaluation')
 parser.add_argument('--trained_model',
-                    default="/home/wangxu/Projects/SSD/weights/ssd300_sixray_40000.pth", type=str,
+                    default='/home/wangxu/Projects/SSD/weights/ssd512_sixray_25000.pth', type=str,
                     help='Trained state_dict file path to open')
 parser.add_argument('--save_folder',
                     default="eval/", type=str,
@@ -51,7 +55,7 @@ parser.add_argument('--confidence_threshold', default=0.2, type=float,
                     help='Detection confidence threshold')
 parser.add_argument('--top_k', default=5, type=int,
                     help='Further restrict the number of predictions to parse')
-parser.add_argument('--cuda', default=False, type=str2bool,
+parser.add_argument('--cuda', default=True, type=str2bool,
                     help='Use cuda to train model')
 parser.add_argument('--SIXray_root', default=SIXRAY_ROOT,
                     help='Location of SIXRAY root directory')
@@ -81,7 +85,6 @@ YEAR = '2007'
 devkit_path = args.save_folder
 dataset_mean = (104, 117, 123)
 set_type = 'test'
-
 
 class Timer(object):
     """A simple timer."""
@@ -411,7 +414,7 @@ cachedir: Directory for caching the annotations
     return rec, prec, ap
 
 
-def test_net(net, cuda, dataset, transform, top_k, im_size=300, thresh=0.05):
+def test_net(net, cuda, dataset, transform, top_k, im_size=512, thresh=0.05):
     num_images = len(dataset)
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
@@ -421,7 +424,7 @@ def test_net(net, cuda, dataset, transform, top_k, im_size=300, thresh=0.05):
 
     # timers
     _t = {'im_detect': Timer(), 'misc': Timer()}
-    output_dir = get_output_dir('eval/ssd300_sixray', set_type)
+    output_dir = get_output_dir('eval/ssd512_sixray', set_type)
     det_file = os.path.join(output_dir, 'detections.pkl')
 
     for i in range(num_images):
@@ -520,8 +523,8 @@ def evaluate_detections(box_list, output_dir, dataset):
 
 def reset_args(EPOCH):
     global args
-    args.trained_model = "/home/wangxu/Projects/SSD/weights/ssd300_sixray_{:d}.pth".format(EPOCH)
-    saver_root = '/home/wangxu/Projects/SSD/eval/'
+    args.trained_model = "/home/wangxu/Projects/SSD/weights/ssd512_sixray_{:d}.pth".format(EPOCH)
+    saver_root = 'eval/'
     if not os.path.exists(saver_root):
         os.mkdir(saver_root)
     args.save_folder = saver_root + '{:d}epoch/'.format(EPOCH)
@@ -537,30 +540,23 @@ def reset_args(EPOCH):
 
 
 if __name__ == '__main__':
-    # EPOCHS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
-    # EPOCHS = [85, 90, 95, 100, 105, 110, 115, 120]
-    # EPOCHS = [90, 95, 100, 105, 110, 115, 120, 125]
-    '''
-    # EPOCHS = [x for x in range(145, 205, 5)]
-    EPOCHS = [1000, 2000, 3000]
-    print(EPOCHS)
+    EPOCHS = [40000, 45000, 50000, 55000, 60000, 65000, 70000]
     for EPOCH in EPOCHS:
         reset_args(EPOCH)
-'''
-    # load net
-    num_classes = len(labelmap) + 1  # +a1 for background
-    net = build_ssd('test', 300, num_classes)  # initialize SSD
-    net.load_state_dict(torch.load(args.trained_model))
-    net.eval()
-    print('Finished loading model!')
-    # load data
-    dataset = SIXRAYDetection(args.SIXray_root, args.imagesetfile,
-                                BaseTransform(300, dataset_mean),
-                                SIXRAYAnnotationTransform())
-    if args.cuda:
-        net = net.cuda()
-        cudnn.benchmark = True
-    # evaluation
+        # load net
+        num_classes = len(labelmap) + 1  # +a1 for background
+        net = build_ssd('test', 512, num_classes)  # initialize SSD
+        net.load_state_dict(torch.load(args.trained_model))
+        net.eval()
+        print('Finished loading model!')
+        # load data
+        dataset = SIXRAYDetection(args.SIXray_root, args.imagesetfile,
+                                    BaseTransform(512, dataset_mean),
+                                    SIXRAYAnnotationTransform())
+        if args.cuda:
+            net = net.cuda()
+            cudnn.benchmark = True
+        # evaluation
 
-    test_net(net, args.cuda, dataset, BaseTransform(net.size, dataset_mean), 
-            args.top_k, 300, thresh=args.confidence_threshold)
+        test_net(net, args.cuda, dataset, BaseTransform(net.size, dataset_mean), 
+                args.top_k, 512, thresh=args.confidence_threshold)
