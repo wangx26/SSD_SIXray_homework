@@ -22,6 +22,6 @@ SSD
 python train.py --resume 'filename.pth' --start_iter num_of_newiter
 ```
 ## 训练结果：
-使用SSD512，90%数据集进行训练，结果如下：
+使用SSD512，90%数据集进行训练，mAP最高达到0.9181。40000步时mAP即达到0.9119。
 
-![](/home/wangxu/Projects/SSD/weights/Screenshot from 2019-12-13 12-18-42.png) 
+![](https://github.com/wangx26/SSD_SIXray_homework/blob/master/weights/result.png)
