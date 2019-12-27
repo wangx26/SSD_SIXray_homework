@@ -14,7 +14,7 @@ import torch.nn.init as init
 import torch.utils.data as data
 import numpy as np
 import argparse
-
+import os.path as osp
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
@@ -44,7 +44,7 @@ parser.add_argument('--momentum', default=0.9, type=float,
                     help='Momentum value for optim')
 parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
-parser.add_argument('--gamma', default=0.1, type=float,
+parser.add_argument('--gamma', default=0.2, type=float,
                     help='Gamma update for SGD')
 parser.add_argument('--visdom', default=False, type=str2bool,
                     help='Use visdom for loss visualization')
@@ -69,9 +69,8 @@ if not os.path.exists(args.save_folder):
 
 def train():
     cfg = sixray
-    dataset = SIXRAYDetection(root=args.dataset_root,
-                            transform=SSDAugmentation(cfg['min_dim'],
-                                                        MEANS))
+    dataset = SIXRAYDetection(root=args.dataset_root, imagesets=osp.join(SIXRAY_ROOT, 'train.txt'),
+                            transform=SSDAugmentation(cfg['min_dim'], MEANS))
 
     if args.visdom:
         import visdom
@@ -174,7 +173,7 @@ def train():
         loc_loss += loss_l.item()
         conf_loss += loss_c.item()
 
-        if iteration % 5 == 0:
+        if iteration % 10 == 0:
             print('timer: %.4f sec.' % (t1 - t0))
             print('iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.item()), end=' ')
 
@@ -182,7 +181,7 @@ def train():
             update_vis_plot(iteration, loss_l.item(), loss_c.item(),
                             iter_plot, epoch_plot, 'append')
 
-        if iteration != 0 and iteration % 500 == 0:
+        if (iteration != 0 and iteration % 5000 == 0) or (iteration >= 60000 and iteration % 1000 == 0):
             print('Saving state, iter:', iteration)
             torch.save(ssd_net.state_dict(), 'weights/ssd300_sixray_' +
                        repr(iteration) + '.pth')

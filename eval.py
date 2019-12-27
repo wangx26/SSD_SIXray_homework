@@ -83,7 +83,7 @@ imgpath = os.path.join(args.SIXray_root, 'sixray_eval/Image')
 YEAR = '2007'
 
 devkit_path = args.save_folder
-dataset_mean = (104, 117, 123)
+dataset_mean = (211, 221, 225)
 set_type = 'test'
 
 class Timer(object):
@@ -428,7 +428,7 @@ def test_net(net, cuda, dataset, transform, top_k, im_size=512, thresh=0.05):
     det_file = os.path.join(output_dir, 'detections.pkl')
 
     for i in range(num_images):
-        im, gt, h, w, og_im = dataset.pull_item(i)
+        im, gt, h, w, og_im, _ = dataset.pull_item(i)
         # 这里im的颜色偏暗，因为BaseTransform减去了一个mean
         # im_saver = cv2.resize(im[(a2,a1,0),:,:].permute((a1,a2,0)).numpy(), (w,h))
 
@@ -436,7 +436,7 @@ def test_net(net, cuda, dataset, transform, top_k, im_size=512, thresh=0.05):
         im_gt = og_im.copy()
 
         # print(im_det)
-        x = Variable(im.unsqueeze(0))
+        x = im.unsqueeze(0).type(torch.FloatTensor)
         if args.cuda:
             x = x.cuda()
         _t['im_detect'].tic()
@@ -540,7 +540,7 @@ def reset_args(EPOCH):
 
 
 if __name__ == '__main__':
-    EPOCHS = [40000, 45000, 50000, 55000, 60000, 65000, 70000]
+    EPOCHS = [65000]
     for EPOCH in EPOCHS:
         reset_args(EPOCH)
         # load net

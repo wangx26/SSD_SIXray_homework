@@ -13,8 +13,8 @@ MEANS = (211, 221, 225)
 # SSD512 CONFIGS
 sixray = {
     'num_classes': 3,
-    'lr_steps': (60000, 68000, 74000),
-    'max_iter': 74000,
+    'lr_steps': (60000, 65000, 70000),
+    'max_iter': 75000,
     'feature_maps': [64, 32, 16, 8, 4, 2],
     'min_dim': 512,
     'steps': [8, 16, 32, 64, 128, 256],

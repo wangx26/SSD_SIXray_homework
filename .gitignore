@@ -1,6 +1,8 @@
 data/sixray/core_3000
 data/sixray/coreless_3000
 data/sixray/sixray_eval
+data/sixray/Anno_test/
+data/sixray/Image_test/
 eval/
 __pycache__/
 # weights/ssd512_sixray_*.pth

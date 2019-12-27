@@ -7,10 +7,6 @@ import torch.utils.data as data
 import cv2
 import numpy as np
 
-if sys.version_info[0] == 2:
-    import xml.etree.cElementTree as ET
-else:
-    import xml.etree.ElementTree as ET
 
 SIXRAY_CLASSES = ('带电芯充电宝', '不带电芯充电宝')
 SIXRAY_ROOT = osp.join(HOME, 'data/sixray/')
@@ -38,7 +34,7 @@ class SIXRAYAnnotationTransform(object):
         self.class_to_ind = class_to_ind or dict(zip(SIXRAY_CLASSES, range(len(SIXRAY_CLASSES))))
         self.keep_difficult = keep_difficult
 
-    def __call__(self, target, width, height, idx):
+    def __call__(self, target, width, height):
         """
         Arguments:
             target (annotation) : the target annotation to be made usable will be an ET.Element            
@@ -96,26 +92,35 @@ class SIXRAYDetection(data.Dataset):
             (eg: take in caption string, return tensor of word indices)
         dataset_name (string, optional): which dataset to load
     """
-    def __init__(self, root, imagesets=osp.join(SIXRAY_ROOT, 'train.txt'), transform=None, target_transform=SIXRAYAnnotationTransform(),\
-         dataset_name='SIXRAY'):
+    def __init__(self, root, imagesets=None, img_path=None, anno_path=None, transform=None, 
+    target_transform=SIXRAYAnnotationTransform(), dataset_name='SIXRAY'):
         self.root = root
-        self.image_set = imagesets
         self.transform = transform
         self.target_transform = target_transform
         self.name = dataset_name
-        self._annopath = osp.join('%s' % self.root, 'core_3000/Annotation/core_battery%s.txt')
-        self._imgpath = osp.join('%s' % self.root, 'core_3000/Image/core_battery%s.jpg')
-        self._annopath1 = osp.join('%s' % self.root, 'coreless_3000/Annotation/coreless_battery%s.txt')
-        self._imgpath1 = osp.join('%s' % self.root, 'coreless_3000/Image/coreless_battery%s.jpg')
         self.ids = list()
 
-        with open(self.image_set, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                self.ids.append(line.strip('\n'))
-
+        if imagesets:
+            with open(imagesets, 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    self.ids.append(line.strip('\n'))
+            self._annopath = osp.join('%s' % self.root, 'core_3000/Annotation/core_battery%s.txt')
+            self._imgpath = osp.join('%s' % self.root, 'core_3000/Image/core_battery%s.jpg')
+            self._annopath1 = osp.join('%s' % self.root, 'coreless_3000/Annotation/coreless_battery%s.txt')
+            self._imgpath1 = osp.join('%s' % self.root, 'coreless_3000/Image/coreless_battery%s.jpg')
+               
+        elif img_path and anno_path:
+            l = os.listdir(img_path)
+            for x in l:
+                self.ids.append(x[-12:-4])
+            self._annopath = osp.join(anno_path, 'core_battery%s.txt')
+            self._imgpath = osp.join(img_path, 'core_battery%s.jpg')
+            self._annopath1 = osp.join(anno_path, 'coreless_battery%s.txt')
+            self._imgpath1 = osp.join(img_path, 'coreless_battery%s.jpg')
+        
     def __getitem__(self, index):
-        im, gt, h, w, og_im = self.pull_item(index)
+        im, gt, h, w, og_im, _ = self.pull_item(index)
         return im, gt
 
     def __len__(self):
@@ -124,8 +129,6 @@ class SIXRAYDetection(data.Dataset):
     def pull_item(self, index):
         img_id = self.ids[index]
         target = self._annopath % img_id  # 注释目录
-        # print(target)
-        # print(self._imgpath % img_id)
         img = cv2.imread(self._imgpath % img_id)
         if img is None:
             target = self._annopath1 % img_id
@@ -134,12 +137,10 @@ class SIXRAYDetection(data.Dataset):
             print('\nwrong\n')
             print(self._imgpath1 % img_id)
         height, width, channels = img.shape
-        # print("height: " + str(height) + " ; width : " + str(width) + " ; channels " + str(channels) )
         og_img = img
 
-        # print (img_id)
         if self.target_transform is not None:
-            target = self.target_transform(target, width, height, img_id)
+            target = self.target_transform(target, width, height)
             target = np.array(target)
         if self.transform is not None:
             target = np.array(target)
@@ -148,5 +149,24 @@ class SIXRAYDetection(data.Dataset):
             img = img[:, :, (2, 1, 0)]
             # img = img.transpose(a2, 0, a1)
             target = np.hstack((boxes, np.expand_dims(labels, axis=1)))
-        return torch.from_numpy(img).permute(2, 0, 1), target, height, width, og_img
+        return torch.from_numpy(img).permute(2, 0, 1), target, height, width, og_img, img_id
         # return torch.from_numpy(img), target, height, width
+
+    def pull_image(self, index):        
+        img_id = self.ids[index]
+        img = cv2.imread(self._imgpath % img_id)
+        type_core = 'core_battery'
+        if img is None:
+            img = cv2.imread(self._imgpath1 % img_id)
+            type_core = 'coreless_battery'
+        return img, type_core
+'''
+    def pull_anno(self, index):        
+        img_id = self.ids[index]
+        target = self._annopath % img_id
+        img = cv2.imread(self._imgpath % img_id)
+        if img is None:
+            target = self._annopath1 % img_id
+        gt = self.target_transform(target, 1, 1)
+        return img_id, gt
+'''
