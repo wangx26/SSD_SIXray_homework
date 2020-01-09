@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
-parser.add_argument('--trained_model', default='weights/ssd512_sixray_65000.pth',
+parser.add_argument('--trained_model', default='weights/ssd512_sixray_72000.pth',
                     type=str, help='Trained state_dict file path to open')
 parser.add_argument('--save_folder', default='../predicted_file/', type=str,
                     help='Dir to save results')
@@ -44,8 +44,8 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
     num_images = len(testset)
     for i in range(num_images):
         print('Testing image {:d}/{:d}....'.format(i+1, num_images))
-        img, type_core = testset.pull_image(i)
-        _, annotation, height, width, og_img, img_id = testset.pull_item(i)
+        img, type_core, img_id = testset.pull_image(i)
+        _, annotation, height, width, og_img = testset.pull_item(i)
         #img_id, annotation = testset.pull_anno(i)
         x = torch.from_numpy(transform(img)[0]).permute(2, 0, 1)
         x = x.unsqueeze(0).type(torch.FloatTensor)

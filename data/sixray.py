@@ -120,7 +120,7 @@ class SIXRAYDetection(data.Dataset):
             self._imgpath1 = osp.join(img_path, 'coreless_battery%s.jpg')
         
     def __getitem__(self, index):
-        im, gt, h, w, og_im, _ = self.pull_item(index)
+        im, gt, h, w, og_im = self.pull_item(index)
         return im, gt
 
     def __len__(self):
@@ -149,7 +149,7 @@ class SIXRAYDetection(data.Dataset):
             img = img[:, :, (2, 1, 0)]
             # img = img.transpose(a2, 0, a1)
             target = np.hstack((boxes, np.expand_dims(labels, axis=1)))
-        return torch.from_numpy(img).permute(2, 0, 1), target, height, width, og_img, img_id
+        return torch.from_numpy(img).permute(2, 0, 1), target, height, width, og_img
         # return torch.from_numpy(img), target, height, width
 
     def pull_image(self, index):        
@@ -159,7 +159,7 @@ class SIXRAYDetection(data.Dataset):
         if img is None:
             img = cv2.imread(self._imgpath1 % img_id)
             type_core = 'coreless_battery'
-        return img, type_core
+        return img, type_core, img_id
 '''
     def pull_anno(self, index):        
         img_id = self.ids[index]

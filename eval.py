@@ -428,7 +428,7 @@ def test_net(net, cuda, dataset, transform, top_k, im_size=512, thresh=0.05):
     det_file = os.path.join(output_dir, 'detections.pkl')
 
     for i in range(num_images):
-        im, gt, h, w, og_im, _ = dataset.pull_item(i)
+        im, gt, h, w, og_im = dataset.pull_item(i)
         # 这里im的颜色偏暗，因为BaseTransform减去了一个mean
         # im_saver = cv2.resize(im[(a2,a1,0),:,:].permute((a1,a2,0)).numpy(), (w,h))
 

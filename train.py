@@ -15,6 +15,8 @@ import torch.utils.data as data
 import numpy as np
 import argparse
 import os.path as osp
+from tensorboardX import SummaryWriter
+
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
@@ -132,6 +134,7 @@ def train():
                                   pin_memory=True)
     # create batch iterator
     batch_iterator = iter(data_loader)
+    writer = SummaryWriter()
     for iteration in range(args.start_iter, cfg['max_iter']):
         if args.visdom and iteration != 0 and (iteration % epoch_size == 0):
             update_vis_plot(epoch, loc_loss, conf_loss, epoch_plot, None,
@@ -173,6 +176,10 @@ def train():
         loc_loss += loss_l.item()
         conf_loss += loss_c.item()
 
+        writer.add_scalars('loss', {'loss': loss.data.item()}, iteration)
+        writer.add_scalars('loss_l', {'loss_l': loss_l.data.item()}, iteration)
+        writer.add_scalars('loss_c', {'loss_c': loss_c.data.item()}, iteration)
+
         if iteration % 10 == 0:
             print('timer: %.4f sec.' % (t1 - t0))
             print('iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.item()), end=' ')
@@ -185,6 +192,7 @@ def train():
             print('Saving state, iter:', iteration)
             torch.save(ssd_net.state_dict(), 'weights/ssd300_sixray_' +
                        repr(iteration) + '.pth')
+    writer.close()
     torch.save(ssd_net.state_dict(),
                args.save_folder + '' + args.dataset + '.pth')
 
